@@ -1,0 +1,1 @@
+web: gunicorn looker_mobile_flask_app:app
