@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Looker Studio — Mobile Viewer</title>
+
+  <style>
+    :root{
+      --bg:#0f1724; /* dark */
+      --card:#0b1220;
+      --muted:#9aa6bf;
+      --accent:#06b6d4; /* cyan-ish */
+      --glass: rgba(255,255,255,0.04);
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#071029);color:#e6eef8}
+    .app{
+      max-width:900px;margin:0 auto;display:flex;flex-direction:column;height:100vh;gap:10px;padding:10px;
+    }
+
+    header.toolbar{
+      display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(6px);
+      box-shadow:0 6px 20px rgba(2,6,23,0.6);
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700;color:#051022}
+    .title{font-size:14px;font-weight:600}
+    .subtitle{font-size:12px;color:var(--muted)}
+
+    .spacer{flex:1}
+    .btn{border:0;padding:8px 12px;border-radius:10px;background:var(--glass);color:inherit;font-weight:600;font-size:13px}
+    .icon-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.03)}
+
+    main.viewer{flex:1;display:flex;flex-direction:column;gap:8px}
+
+    /* responsive iframe container keeps correct aspect ratio & fills space */
+    .frame-wrap{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#051022, #071029);box-shadow:0 8px 30px rgba(2,6,23,0.6);flex:1;display:flex;align-items:center;justify-content:center}
+    .frame-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;color:var(--muted);gap:8px}
+
+    iframe.report{
+      width:100%;height:100%;border:0;display:block;
+      /* allow smooth pinch/zoom inside report if the report supports it */
+      touch-action:manipulation;
+    }
+
+    footer.controls{display:flex;gap:8px;align-items:center;padding:6px}
+
+    /* small-screen tweaks */
+    @media (max-width:480px){
+      .app{padding:8px}
+      .title{font-size:13px}
+      .logo{width:38px;height:38px}
+      .btn{padding:7px 10px;font-size:13px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="application">
+    <header class="toolbar" role="banner">
+      <div class="brand">
+        <div class="logo">LS</div>
+        <div>
+          <div class="title">Looker Studio Viewer</div>
+          <div class="subtitle">Mobile-optimized wrapper</div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <button id="open-native" class="btn" title="Open report in Looker Studio app / new tab">Open report</button>
+      <button id="fullscreen" class="icon-btn" title="Toggle fullscreen">⛶</button>
+    </header>
+
+    <main class="viewer" role="main">
+      <!-- replace EMBED_URL below with the iframe embed URL from Looker Studio -->
+      <div id="frameWrap" class="frame-wrap">
+        <div class="frame-placeholder" id="placeholder">
+          <div style="font-size:22px;font-weight:700">Your report is loading...</div>
+          <div style="font-size:13px">Tap refresh if it doesn't appear. Make sure the report is shared for "Anyone with the link" if you want public access.</div>
+          <div style="font-size:12px;color:var(--muted)">Tip: replace EMBED_URL in the HTML with your report's Embed link</div>
+        </div>
+
+        <!-- <iframe> is lazy-inserted by JS for better performance on mobile -->
+      </div>
+
+      <footer class="controls" role="toolbar">
+        <button id="reload" class="btn">Reload</button>
+        <button id="fit" class="btn">Fit width</button>
+        <div style="flex:1"></div>
+        <small style="color:var(--muted);font-size:12px">Touches: pinch to zoom, two-finger drag to scroll</small>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // ---------- CONFIG: paste your Looker Studio embed URL here ----------
+    // get this from Looker Studio: File -> Embed report -> Enable embedding -> copy the iframe src URL
+    const EMBED_URL = 'https://lookerstudio.google.com/embed/reporting/103aa740-f3fa-458e-b496-a6861c15c88c/page/p_qpwrvqb8ud';
+    // ---------------------------------------------------------------------
+
+    const frameWrap = document.getElementById('frameWrap');
+    const placeholder = document.getElementById('placeholder');
+
+    let iframeEl = null;
+
+    function insertIframe(){
+      if(iframeEl) return;
+      iframeEl = document.createElement('iframe');
+      iframeEl.className = 'report';
+      iframeEl.setAttribute('loading','lazy');
+      iframeEl.setAttribute('allowfullscreen','');
+      iframeEl.setAttribute('referrerpolicy','no-referrer-when-downgrade');
+      iframeEl.src = EMBED_URL;
+      // sandbox is intentionally not set here to let Looker Studio function; if you need extra security, test carefully
+      frameWrap.appendChild(iframeEl);
+      placeholder.style.display='none';
+
+      // Small improvement: if user rotates or resizes, re-trigger a resize event inside iframe by blurring/focusing
+      window.addEventListener('orientationchange', ()=>{ try{ iframeEl.contentWindow.dispatchEvent(new Event('resize')); }catch(e){} });
+    }
+
+    // Lazy-load: create iframe when user interacts or when visible on screen
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting) insertIframe(); });
+    },{root:null,threshold:0.1});
+
+    observer.observe(frameWrap);
+
+    // Buttons
+    document.getElementById('reload').addEventListener('click', ()=>{
+      if(iframeEl){ iframeEl.src = iframeEl.src; }
+      else insertIframe();
+    });
+
+    document.getElementById('open-native').addEventListener('click', ()=>{
+      // Open the direct report link in a new tab or try Looker Studio mobile deep link if available
+      window.open(EMBED_URL.replace('/embed/reporting','/reporting'), '_blank');
+    });
+
+    document.getElementById('fullscreen').addEventListener('click', async ()=>{
+      if(!iframeEl) return insertIframe();
+      const el = frameWrap;
+      if(!document.fullscreenElement){
+        try{ await el.requestFullscreen(); }catch(e){ alert('Fullscreen blocked by browser'); }
+      } else { document.exitFullscreen(); }
+    });
+
+    document.getElementById('fit').addEventListener('click', ()=>{
+      if(!iframeEl) return insertIframe();
+      // toggles between 100% height and auto (shows full page inside iframe scroll)
+      if(iframeEl.style.height === '100%'){
+        iframeEl.style.height = '1200px';
+      } else {
+        iframeEl.style.height = '100%';
+      }
+    });
+
+    // Accessibility: add shortcut to refresh with "r" key when focused
+    window.addEventListener('keydown', (e)=>{ if(e.key==='r'){ e.preventDefault(); document.getElementById('reload').click(); } });
+
+    // If EMBED_URL is not set warn the developer (this won't be shown to end user in production)
+    if(EMBED_URL.includes('REPLACE_WITH_YOUR_REPORT_ID')){
+      console.warn('Replace EMBED_URL in the HTML with your Looker Studio embed URL. See comments at top.');
+    }
+
+  </script>
+
+  <!--
+    Deployment tips (quick):
+      1) Save this file as looker_mobile.html
+      2) Replace EMBED_URL in the JS with the iframe src from Looker Studio's Embed dialog
+      3) Commit to GitHub and enable GitHub Pages for the repo (Settings -> Pages -> main branch / root)
+      4) Alternatively host as a static site on Netlify / Vercel / Render static site
+
+    Mobile-app wrap examples:
+      - iOS (WKWebView): create a simple single-view app and point the WKWebView to the hosted URL
+      - Android (WebView): same idea — set webview.getSettings().setSupportZoom(true)
+
+    Security note: If your report isn't public, you'll need to ensure the user's Google session is present in the WebView, or use authenticated embedding (OAuth / Viewer credentials) — this HTML is for publicly shared or link-shared reports.
+  -->
+</body>
+</html>
