@@ -1,497 +1,137 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Looker Studio — Mobile Viewer</title>
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#00bcd4">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Looker Studio Viewer</title>
 
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Looker Studio">
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-
-  <style>
-    :root {
-      --bg: #0f1724;
-      --card: #0b1220;
-      --muted: #9aa6bf;
-      --accent: #06b6d4;
-      --glass: rgba(255, 255, 255, 0.05);
-      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
-    }
-
-    html, body {
-      margin: 0;
-      height: 100%;
-      background: linear-gradient(180deg, var(--bg), #071029);
-      color: #e6eef8;
-    }
-
-    .app {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      max-width: 100%;
-      overflow: hidden;
-    }
-
-    header.toolbar {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      gap: 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-      z-index: 10;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--accent), #60a5fa);
-      border-radius: 10px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #051022;
-    }
-
-    .title { font-weight: 600; font-size: 14px; }
-    .subtitle { font-size: 12px; color: var(--muted); }
-
-    .spacer { flex: 1; }
-
-    .btn, .icon-btn {
-      background: var(--glass);
-      border: 0;
-      color: #e6eef8;
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .icon-btn {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 8px 10px;
-    }
-
-    main.viewer {
-      flex: 1;
-      display: flex;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* SIDEBAR STYLES */
-    .sidebar {
-      width: 240px;
-      background: var(--card);
-      border-right: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 4px 0 20px rgba(0,0,0,0.5);
-      padding: 16px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      transform: translateX(0);
-      transition: transform 0.3s ease;
-      z-index: 9;
-      overflow-y: auto;
-    }
-
-    .sidebar.hidden {
-      transform: translateX(-260px);
-    }
-
-    .sidebar h3 {
-      margin: 0 0 10px 8px;
-      color: var(--muted);
-      font-size: 13px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .sidebar button {
-      background: transparent;
-      border: none;
-      text-align: left;
-      padding: 10px 12px;
-      border-radius: 8px;
-      color: #e6eef8;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .sidebar button:hover {
-      background: rgba(255,255,255,0.05);
-      color: var(--accent);
-    }
-
-    .sidebar button.active {
-      background: var(--accent);
-      color: #051022;
-      font-weight: 600;
-    }
-
-    .sidebar button.disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
-
-    .user-info {
-      padding: 12px;
-      margin-bottom: 12px;
-      background: rgba(6, 182, 212, 0.1);
-      border-radius: 8px;
-      border: 1px solid rgba(6, 182, 212, 0.3);
-    }
-
-    .user-info .email {
-      font-size: 12px;
-      color: var(--accent);
-      margin-bottom: 4px;
-    }
-
-    .user-info .role {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Overlay when sidebar open (for mobile) */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(3px);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease;
-      z-index: 8;
-    }
-
-    .overlay.show {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    /* Iframe container */
-    .frame-wrap {
-      flex: 1;
-      border-radius: 0;
-      overflow: hidden;
-      background: linear-gradient(180deg,#051022, #071029);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-    }
-
-    iframe.report {
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-
-    .toggle-sidebar {
-      display: inline-flex;
-    }
-
-    /* Loading screen */
-    .loading-screen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      gap: 20px;
-    }
-
-    .loading-screen.hidden {
-      display: none;
-    }
-
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(6, 182, 212, 0.2);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .error-message {
-      color: #ef4444;
-      text-align: center;
-      padding: 20px;
-      background: rgba(239, 68, 68, 0.1);
-      border-radius: 8px;
-      margin: 20px;
-    }
-
-    @media (min-width: 768px) {
-      .sidebar {
-        position: relative;
-        transform: translateX(0) !important;
-      }
-      .overlay { display: none !important; }
-    }
-
-  </style>
+<style>
+:root {
+  --bg:#0f1724; --card:#0b1220; --accent:#06b6d4; --muted:#9aa6bf;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+html,body{margin:0;height:100%;background:var(--bg);color:#e6eef8}
+.app{display:none;flex-direction:column;height:100vh}
+header{display:flex;align-items:center;padding:12px;background:#0b1220}
+.logo{width:36px;height:36px;border-radius:8px;
+background:linear-gradient(135deg,var(--accent),#60a5fa);
+display:flex;align-items:center;justify-content:center;color:#051022;font-weight:700}
+.spacer{flex:1}
+button{background:rgba(255,255,255,.05);border:0;color:#fff;
+padding:8px 12px;border-radius:8px;cursor:pointer}
+main{flex:1;display:flex;overflow:hidden}
+.sidebar{width:230px;background:var(--card);padding:12px;overflow-y:auto}
+.sidebar button{width:100%;text-align:left;margin-bottom:6px}
+.sidebar button.active{background:var(--accent);color:#051022}
+.frame{flex:1}
+iframe{width:100%;height:100%;border:0}
+.loading{position:fixed;inset:0;display:flex;align-items:center;
+justify-content:center;flex-direction:column;gap:12px}
+.spinner{width:40px;height:40px;border:4px solid rgba(6,182,212,.3);
+border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error{color:#ef4444;text-align:center;padding:20px}
+.user{font-size:12px;color:var(--muted);margin:10px}
+</style>
 </head>
 
 <body>
-  <div id="loadingScreen" class="loading-screen">
-    <div class="spinner"></div>
-    <div>Verifying access...</div>
+
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <div>Verifying access…</div>
+</div>
+
+<div class="app" id="app">
+<header>
+  <div class="logo">LS</div>
+  <div style="margin-left:10px">
+    <div>Looker Studio</div>
+    <div id="roleLabel" style="font-size:12px;color:var(--muted)"></div>
   </div>
+  <div class="spacer"></div>
+  <button id="openNative">Open</button>
+</header>
 
-  <div class="app" role="application" style="display: none;">
-    <header class="toolbar">
-      <button id="toggleSidebar" class="icon-btn toggle-sidebar">☰</button>
-      <div class="brand">
-        <div class="logo">LS</div>
-        <div>
-          <div class="title">Looker Studio Viewer</div>
-          <div class="subtitle" id="userRoleDisplay">Mobile-optimized wrapper</div>
-        </div>
-      </div>
-      <div class="spacer"></div>
-      <button id="open-native" class="btn">Open</button>
-      <button id="fullscreen" class="icon-btn">⛶</button>
-    </header>
-
-    <main class="viewer">
-      <aside id="sidebar" class="sidebar">
-        <div id="userInfo" class="user-info" style="display: none;">
-          <div class="email" id="userEmail"></div>
-          <div class="role" id="userRole"></div>
-        </div>
-        
-        <h3>Reports</h3>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345" data-page="1" data-roles="Admin,DSE,Manager,DMS,TelecallerHead">Page 1 - Dashboard</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_8qpzw1t6zd" data-page="2" data-roles="Admin,Manager">Page 2 - Sales Report</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d" data-page="3" data-roles="Admin,DSE,Manager">Page 3 - Performance</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_xyz123abc" data-page="4" data-roles="Admin,DMS">Page 4 - Inventory</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_abc456def" data-page="5" data-roles="Admin,TelecallerHead">Page 5 - Call Analytics</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_ghi789jkl" data-page="6" data-roles="Admin,Manager,DMS">Page 6 - Financial</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_mno012pqr" data-page="7" data-roles="Admin,DSE">Page 7 - Customer Data</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_stu345vwx" data-page="8" data-roles="Admin">Page 8 - Admin Panel</button>
-      </aside>
-
-      <div class="overlay" id="overlay"></div>
-
-      <div id="frameWrap" class="frame-wrap">
-        <iframe id="reportFrame" class="report" src="" allowfullscreen loading="lazy"></iframe>
-      </div>
-    </main>
+<main>
+  <aside class="sidebar">
+    <div class="user" id="userInfo"></div>
+    <div id="menu"></div>
+  </aside>
+  <div class="frame">
+    <iframe id="frame"></iframe>
   </div>
+</main>
+</div>
 
-  <script>
-    // CONFIGURATION - Replace with your Google Sheets API endpoint
-    const GOOGLE_SHEET_URL = 'https://script.google.com/a/macros/chavanhero.in/s/AKfycbw0pC4J3lHdIGODq5iT8rCZ7pLZy0Mg3q3V6LnzyFeKozkp4qL1dlYftGmc98UrWRB3/exec';
-    
-    // Get URL parameters
-    function getURLParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        email: params.get('email') || params.get('user') || params.get('userEmail'),
-        directAccess: params.get('admin') === 'true'
-      };
-    }
+<script>
+/* ================= CONFIG ================= */
+const API =
+'https://script.google.com/a/macros/chavanhero.in/s/AKfycbw0pC4J3lHdIGODq5iT8rCZ7pLZy0Mg3q3V6LnzyFeKozkp4qL1dlYftGmc98UrWRB3/exec';
 
-    // Verify user against Google Sheets
-    async function verifyUser(email) {
-      try {
-        const response = await fetch(`${GOOGLE_SHEET_URL}?email=${encodeURIComponent(email)}`);
-        if (!response.ok) throw new Error('Failed to verify user');
-        
-        const data = await response.json();
-        return data; // Expected: { email: 'user@example.com', role: 'Admin', authorized: true }
-      } catch (error) {
-        console.error('User verification error:', error);
-        return { authorized: false, error: error.message };
-      }
-    }
+const PAGES = {
+  1: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345',
+  2: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_8qpzw1t6zd',
+  3: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d',
+  4: 'PAGE4_URL',
+  5: 'PAGE5_URL',
+  6: 'PAGE6_URL',
+  7: 'PAGE7_URL',
+  8: 'PAGE8_URL'
+};
 
-    // Initialize app
-    async function initApp() {
-      const loadingScreen = document.getElementById('loadingScreen');
-      const app = document.querySelector('.app');
-      const params = getURLParams();
+/* ================= INIT ================= */
+(async function () {
+  const params = new URLSearchParams(location.search);
+  const email = params.get('email');
 
-      // Admin direct access (no email check)
-      if (params.directAccess) {
-        loadingScreen.classList.add('hidden');
-        app.style.display = 'flex';
-        setupUI({ email: 'Admin', role: 'Admin', authorized: true });
-        return;
-      }
+  if (!email) return deny('Email missing');
 
-      // Check for email parameter
-      if (!params.email) {
-        loadingScreen.innerHTML = `
-          <div class="error-message">
-            <h2>Access Denied</h2>
-            <p>No email parameter found. Please use the authorized link.</p>
-            <p style="font-size: 12px; margin-top: 20px;">Redirecting to AppSheet...</p>
-          </div>
-        `;
-        setTimeout(() => {
-          window.location.href = 'YOUR_APPSHEET_REDIRECT_URL_HERE';
-        }, 3000);
-        return;
-      }
+  const res = await fetch(`${API}?email=${encodeURIComponent(email)}&src=appsheet`);
+  const data = await res.json();
 
-      // Verify user
-      const userData = await verifyUser(params.email);
+  if (!data.authorized) return deny(data.error || 'Access denied');
 
-      if (!userData.authorized) {
-        loadingScreen.innerHTML = `
-          <div class="error-message">
-            <h2>Access Denied</h2>
-            <p>You are not authorized to access this dashboard.</p>
-            <p style="font-size: 12px; margin-top: 10px;">Email: ${params.email}</p>
-            <p style="font-size: 12px; margin-top: 20px;">Redirecting to AppSheet...</p>
-          </div>
-        `;
-        setTimeout(() => {
-          window.location.href = 'YOUR_APPSHEET_REDIRECT_URL_HERE';
-        }, 3000);
-        return;
-      }
+  boot(data);
+})();
 
-      // User authorized - setup UI
-      loadingScreen.classList.add('hidden');
-      app.style.display = 'flex';
-      setupUI(userData);
-    }
+/* ================= FUNCTIONS ================= */
+function boot(user) {
+  document.getElementById('loading').remove();
+  document.getElementById('app').style.display = 'flex';
 
-    // Setup UI based on user role
-    function setupUI(userData) {
-      const sidebar = document.getElementById('sidebar');
-      const toggleSidebar = document.getElementById('toggleSidebar');
-      const overlay = document.getElementById('overlay');
-      const reportFrame = document.getElementById('reportFrame');
-      const openNative = document.getElementById('open-native');
-      const fullscreenBtn = document.getElementById('fullscreen');
-      const userInfo = document.getElementById('userInfo');
-      const userEmail = document.getElementById('userEmail');
-      const userRole = document.getElementById('userRole');
-      const userRoleDisplay = document.getElementById('userRoleDisplay');
+  document.getElementById('userInfo').textContent = user.email;
+  document.getElementById('roleLabel').textContent = user.role;
 
-      // Display user info
-      userInfo.style.display = 'block';
-      userEmail.textContent = userData.email;
-      userRole.textContent = `Role: ${userData.role}`;
-      userRoleDisplay.textContent = userData.role;
+  const menu = document.getElementById('menu');
+  const frame = document.getElementById('frame');
 
-      // Filter buttons based on role
-      const buttons = sidebar.querySelectorAll('button[data-url]');
-      const userRoleName = userData.role;
-      
-      buttons.forEach(btn => {
-        const allowedRoles = btn.dataset.roles.split(',');
-        if (!allowedRoles.includes(userRoleName)) {
-          btn.classList.add('disabled');
-          btn.style.display = 'none'; // Hide unauthorized pages
-        }
-      });
+  user.pages.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = `Page ${p}`;
+    btn.onclick = () => load(PAGES[p], btn);
+    if (i === 0) btn.classList.add('active');
+    menu.appendChild(btn);
+    if (i === 0) frame.src = PAGES[p];
+  });
 
-      // Sidebar toggle for mobile
-      toggleSidebar.addEventListener('click', () => {
-        sidebar.classList.toggle('hidden');
-        overlay.classList.toggle('show');
-      });
-      
-      overlay.addEventListener('click', () => {
-        sidebar.classList.add('hidden');
-        overlay.classList.remove('show');
-      });
+  document.getElementById('openNative').onclick = () => {
+    const url = frame.src.replace('/embed/reporting', '/reporting');
+    window.open(url, '_blank');
+  };
+}
 
-      // Load selected report
-      function loadReport(url) {
-        if (!url) return;
-        reportFrame.src = url;
-        localStorage.setItem('lastReport', url);
-      }
+function load(url, btn) {
+  if (!url.startsWith('https://lookerstudio.google.com/embed/')) return;
+  document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('frame').src = url;
+}
 
-      // Handle sidebar clicks
-      buttons.forEach(btn => {
-        if (!btn.classList.contains('disabled')) {
-          btn.addEventListener('click', () => {
-            sidebar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            loadReport(btn.dataset.url);
-            sidebar.classList.add('hidden');
-            overlay.classList.remove('show');
-          });
-        }
-      });
-
-      // Load first available report
-      const firstAvailable = [...buttons].find(b => !b.classList.contains('disabled'));
-      if (firstAvailable) {
-        firstAvailable.classList.add('active');
-        loadReport(firstAvailable.dataset.url);
-      }
-
-      // Open native Looker Studio tab
-      openNative.addEventListener('click', () => {
-        const active = sidebar.querySelector('button.active');
-        if (active) {
-          const nativeUrl = active.dataset.url.replace('/embed/reporting', '/reporting');
-          window.open(nativeUrl, '_blank');
-        }
-      });
-
-      // Fullscreen toggle
-      fullscreenBtn.addEventListener('click', async () => {
-        const el = reportFrame;
-        if (!document.fullscreenElement) {
-          await el.requestFullscreen().catch(err => console.log(err));
-        } else {
-          document.exitFullscreen();
-        }
-      });
-
-      // Register service worker
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./service-worker.js')
-          .then(() => console.log('Service Worker registered'))
-          .catch(err => console.warn('SW failed', err));
-      }
-    }
-
-    // Start the app
-    initApp();
-  </script>
+function deny(msg) {
+  document.getElementById('loading').innerHTML =
+    `<div class="error"><h3>Access Denied</h3><p>${msg}</p></div>`;
+}
+</script>
 </body>
 </html>
