@@ -13,7 +13,7 @@
 font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:#e6eef8;overflow:hidden}
-.app{display:none;flex-direction:column;height:100vh;will-change:transform}
+.app{display:none;flex-direction:column;height:100vh}
 header{display:flex;align-items:center;padding:10px 12px;background:#0b1220;
 border-bottom:1px solid rgba(255,255,255,.05)}
 .logo{width:32px;height:32px;border-radius:6px;
@@ -28,10 +28,7 @@ button:hover{background:rgba(255,255,255,.1)}
 button:active{transform:scale(.98)}
 main{flex:1;display:flex;overflow:hidden}
 .sidebar{width:200px;background:var(--card);padding:8px;overflow-y:auto;
-border-right:1px solid rgba(255,255,255,.05);scrollbar-width:thin}
-.sidebar::-webkit-scrollbar{width:6px}
-.sidebar::-webkit-scrollbar-track{background:transparent}
-.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+border-right:1px solid rgba(255,255,255,.05)}
 .user{font-size:11px;color:var(--muted);padding:8px;margin-bottom:8px;
 border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sidebar button{width:100%;text-align:left;margin-bottom:4px;padding:8px 10px;font-size:13px}
@@ -43,9 +40,9 @@ justify-content:center;flex-direction:column;gap:12px;background:var(--bg);z-ind
 .spinner{width:36px;height:36px;border:3px solid rgba(6,182,212,.2);
 border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.error{color:#ef4444;text-align:center;padding:20px;max-width:400px}
+.error{color:#ef4444;text-align:center;padding:20px;max-width:500px}
 .error h3{margin:0 0 8px;font-size:18px}
-.error p{margin:0;font-size:14px;opacity:.8}
+.error p{margin:4px 0;font-size:13px;opacity:.8}
 @media(max-width:768px){
 .sidebar{width:100%;max-width:240px;position:absolute;left:0;top:0;bottom:0;
 transform:translateX(-100%);transition:transform .2s;z-index:10}
@@ -84,7 +81,7 @@ transform:translateX(-100%);transition:transform .2s;z-index:10}
     <div id="menu"></div>
   </aside>
   <div class="frame">
-    <iframe id="frame" loading="lazy" importance="high"></iframe>
+    <iframe id="frame" loading="lazy"></iframe>
   </div>
 </main>
 </div>
@@ -94,53 +91,28 @@ transform:translateX(-100%);transition:transform .2s;z-index:10}
 
 // ============ CONFIG ============
 const API = 'https://script.google.com/a/macros/chavanhero.in/s/AKfycbw0pC4J3lHdIGODq5iT8rCZ7pLZy0Mg3q3V6LnzyFeKozkp4qL1dlYftGmc98UrWRB3/exec';
-const CACHE_KEY = 'ls_user_cache';
-const CACHE_TTL = 3600000; // 1 hour
 
+// REPLACE WITH YOUR ACTUAL LOOKER STUDIO PAGE URLs
 const PAGES = {
-  1: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page1',
-  2: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page2',
-  3: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page3',
-  4: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page4',
-  5: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page5',
-  6: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page6',
-  7: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page7',
-  8: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_page8'
+  1: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_qpwrvqb8ud',
+  2: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_8qpzw1t6zd',
+  3: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d',
+  4: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_abc456',
+  5: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_def789',
+  6: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_ghi012',
+  7: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_jkl345',
+  8: 'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_mno678'
 };
 
 const PAGE_NAMES = {
   1: 'Dashboard',
-  2: 'Sales',
+  2: 'Sales Report',
   3: 'Performance',
   4: 'Inventory',
-  5: 'Calls',
-  6: 'Finance',
-  7: 'Customers',
-  8: 'Admin'
-};
-
-// ============ CACHE ============
-const cache = {
-  get(email) {
-    try {
-      const data = localStorage.getItem(CACHE_KEY);
-      if (!data) return null;
-      const parsed = JSON.parse(data);
-      if (parsed.email !== email || Date.now() - parsed.ts > CACHE_TTL) {
-        this.clear();
-        return null;
-      }
-      return parsed.user;
-    } catch { return null; }
-  },
-  set(email, user) {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ email, user, ts: Date.now() }));
-    } catch {}
-  },
-  clear() {
-    try { localStorage.removeItem(CACHE_KEY); } catch {}
-  }
+  5: 'Call Analytics',
+  6: 'Financial',
+  7: 'Customer Data',
+  8: 'Admin Panel'
 };
 
 // ============ INIT ============
@@ -148,31 +120,34 @@ const cache = {
   const params = new URLSearchParams(location.search);
   const email = params.get('email');
   
-  if (!email) return deny('Email parameter missing');
+  if (!email) return deny('Email parameter missing from URL');
 
-  // Try cache first
-  let user = cache.get(email);
-  
-  if (!user) {
-    try {
-      const res = await fetch(`${API}?email=${encodeURIComponent(email)}&src=appsheet`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      });
-      
-      if (!res.ok) throw new Error('Network error');
-      
-      const data = await res.json();
-      if (!data.authorized) throw new Error(data.error || 'Access denied');
-      
-      user = data;
-      cache.set(email, user);
-    } catch (err) {
-      return deny(err.message);
+  try {
+    // Always send src=appsheet to API
+    const url = `${API}?email=${encodeURIComponent(email)}&src=appsheet`;
+    console.log('Fetching:', url);
+    
+    const res = await fetch(url);
+    const text = await res.text();
+    console.log('Raw response:', text);
+    
+    const data = JSON.parse(text);
+    console.log('Parsed data:', data);
+    
+    if (!data.authorized) {
+      throw new Error(data.error || 'Access denied');
     }
+    
+    if (!data.pages || data.pages.length === 0) {
+      throw new Error('No pages available for your role');
+    }
+    
+    boot(data);
+    
+  } catch (err) {
+    console.error('Error:', err);
+    deny(err.message);
   }
-
-  boot(user);
 })();
 
 // ============ BOOT ============
@@ -197,48 +172,61 @@ function boot(user) {
   roleLabel.textContent = user.role;
 
   // Create buttons
-  const frag = document.createDocumentFragment();
   let firstUrl = null;
+  let activeBtn = null;
 
-  user.pages.forEach((p, i) => {
-    const url = PAGES[p];
+  user.pages.forEach((pageNum, idx) => {
+    const url = PAGES[pageNum];
     if (!url) return;
     
     const btn = document.createElement('button');
-    btn.textContent = PAGE_NAMES[p] || `Page ${p}`;
-    btn.onclick = () => load(url, btn);
+    btn.textContent = PAGE_NAMES[pageNum] || `Page ${pageNum}`;
+    btn.onclick = () => {
+      if (activeBtn) activeBtn.classList.remove('active');
+      btn.classList.add('active');
+      activeBtn = btn;
+      frame.src = url;
+      
+      // Close mobile sidebar
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    };
     
-    if (i === 0) {
-      btn.className = 'active';
+    if (idx === 0) {
+      btn.classList.add('active');
+      activeBtn = btn;
       firstUrl = url;
     }
     
-    frag.appendChild(btn);
+    menu.appendChild(btn);
   });
 
-  menu.appendChild(frag);
-
-  // Load first page
+  // Load first page after slight delay
   if (firstUrl) {
-    setTimeout(() => frame.src = firstUrl, 100);
+    setTimeout(() => frame.src = firstUrl, 150);
   }
 
-  // Open native
+  // Open native Looker Studio
   openBtn.onclick = () => {
-    const url = frame.src.replace('/embed/reporting', '/reporting');
-    window.open(url, '_blank', 'noopener');
+    const currentUrl = frame.src;
+    if (currentUrl) {
+      const nativeUrl = currentUrl.replace('/embed/reporting', '/reporting');
+      window.open(nativeUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // Mobile sidebar toggle
-  toggle.onclick = () => {
-    sidebar.classList.add('open');
-    overlay.classList.add('show');
-  };
+  if (toggle && overlay) {
+    toggle.onclick = () => {
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+    };
 
-  overlay.onclick = () => {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('show');
-  };
+    overlay.onclick = () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    };
+  }
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
@@ -249,37 +237,18 @@ function boot(user) {
   });
 }
 
-// ============ LOAD PAGE ============
-let currentBtn = null;
-function load(url, btn) {
-  if (!url || !url.startsWith('https://lookerstudio.google.com/embed/')) return;
-  
-  const frame = document.getElementById('frame');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
-  
-  // Update active button
-  if (currentBtn) currentBtn.classList.remove('active');
-  btn.classList.add('active');
-  currentBtn = btn;
-  
-  // Load iframe
-  frame.src = url;
-  
-  // Close mobile sidebar
-  sidebar.classList.remove('open');
-  overlay.classList.remove('show');
-}
-
 // ============ ERROR ============
 function deny(msg) {
-  document.getElementById('loading').innerHTML = 
-    `<div class="error"><h3>Access Denied</h3><p>${msg}</p></div>`;
-}
-
-// ============ SERVICE WORKER (optional) ============
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  const loading = document.getElementById('loading');
+  loading.innerHTML = `
+    <div class="error">
+      <h3>⚠️ Access Denied</h3>
+      <p>${msg}</p>
+      <p style="margin-top:16px;font-size:12px;opacity:.6">
+        Make sure you're using the correct link with your email.
+      </p>
+    </div>
+  `;
 }
 </script>
 </body>
