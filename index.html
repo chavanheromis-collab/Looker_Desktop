@@ -11,7 +11,6 @@
 :root{
   --bg:#1a1d29;
   --panel:#252936;
-  --card:#2d3142;
   --accent:#667eea;
   --text:#fff;
   --muted:#b8c1ec;
@@ -23,7 +22,7 @@ html,body{height:100%;background:var(--bg);color:var(--text)}
 
 .app{display:none;height:100vh;flex-direction:column}
 
-/* ================= HEADER ================= */
+/* HEADER */
 header{
   display:flex;
   align-items:center;
@@ -47,15 +46,11 @@ header{
   width:36px;height:36px;
   display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.25);
-  border-radius:10px;font-weight:600
-}
-
-.title{
-  margin-left:12px;
-  font-size:14px;
+  border-radius:10px;
   font-weight:600;
 }
 
+.title{margin-left:12px;font-size:14px;font-weight:600}
 .spacer{flex:1}
 
 .header-btn{
@@ -67,12 +62,11 @@ header{
   color:#fff;
   cursor:pointer;
 }
-.header-btn:hover{background:rgba(255,255,255,.25)}
 
-/* ================= MAIN ================= */
+/* MAIN */
 main{flex:1;display:flex;overflow:hidden}
 
-/* ================= SIDEBAR ================= */
+/* SIDEBAR */
 .sidebar{
   width:240px;
   background:var(--panel);
@@ -90,15 +84,13 @@ main{flex:1;display:flex;overflow:hidden}
   color:var(--muted);
   text-align:left;
   cursor:pointer;
-  font-size:14px;
 }
-.menu button:hover{background:rgba(255,255,255,.06)}
 .menu button.active{
   background:linear-gradient(135deg,#667eea,#764ba2);
   color:#fff;
 }
 
-/* ================= IFRAME ================= */
+/* VIEWER */
 .viewer{flex:1;padding:12px}
 .iframe-wrap{
   width:100%;
@@ -109,7 +101,7 @@ main{flex:1;display:flex;overflow:hidden}
 }
 iframe{width:100%;height:100%;border:0}
 
-/* ================= LOADING ================= */
+/* LOADING */
 #loading{
   position:fixed;
   inset:0;
@@ -118,11 +110,10 @@ iframe{width:100%;height:100%;border:0}
   justify-content:center;
   background:var(--bg);
   color:var(--muted);
-  font-size:14px;
   z-index:100;
 }
 
-/* ================= MOBILE SIDEBAR ================= */
+/* MOBILE SIDEBAR */
 .sidebar-overlay{
   display:none;
   position:fixed;
@@ -142,7 +133,6 @@ iframe{width:100%;height:100%;border:0}
     transition:transform .25s ease;
     box-shadow:6px 0 18px rgba(0,0,0,.4);
   }
-
   .sidebar.open{transform:translateX(0)}
   .sidebar-overlay.show{display:block}
 }
@@ -183,7 +173,8 @@ iframe{width:100%;height:100%;border:0}
 
 /* ================= CONFIG ================= */
 
-const API = 'https://script.google.com/macros/s/AKfycbwBXE8QpvlJBOWhAIZiAMJu3dk2j_x2KYLUphppNgs8xJnpDH6OMWRwWZC2aFrCr5FE/exec';
+const API =
+'https://script.google.com/macros/s/AKfycbwBXE8QpvlJBOWhAIZiAMJu3dk2j_x2KYLUphppNgs8xJnpDH6OMWRwWZC2aFrCr5FE/exec';
 
 const PAGES = {
   1:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_qpwrvqb8ud',
@@ -203,9 +194,12 @@ const PAGE_NAMES = {
   const email=new URLSearchParams(location.search).get('email');
   if(!email)return showError('Missing email');
 
-  const res=await fetch(`${API}?email=${encodeURIComponent(email)}`);
-  const data=await res.json();
+  /* 🔥 FIX IS HERE */
+  const res=await fetch(
+    `${API}?email=${encodeURIComponent(email)}&src=appsheet`
+  );
 
+  const data=await res.json();
   if(!data.authorized)return showError('Access denied');
 
   initApp(data.pages);
@@ -263,7 +257,6 @@ function openSidebar(){
   sidebar.classList.add('open');
   overlay.classList.add('show');
 }
-
 function closeSidebar(){
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
