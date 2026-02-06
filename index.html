@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"/>
 <title>Looker Studio - Dashboard Viewer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -172,6 +172,12 @@ header::after {
   font-weight: 600;
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .header-btn {
   padding: 10px 20px;
   background: rgba(255,255,255,0.15);
@@ -196,6 +202,67 @@ header::after {
 
 .header-btn:active {
   transform: translateY(0);
+}
+
+.header-btn.refreshing {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.header-btn.refreshing .refresh-icon {
+  animation: spin 1s linear infinite;
+}
+
+/* ============ ZOOM CONTROLS ============ */
+.zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+  background: var(--card-bg);
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.zoom-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-btn:hover {
+  background: var(--hover-bg);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.zoom-btn:active {
+  transform: scale(0.95);
+}
+
+.zoom-level {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 60px;
+  justify-content: center;
 }
 
 /* ============ MAIN LAYOUT ============ */
@@ -327,7 +394,8 @@ main {
   background: #fff;
   margin: 16px;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: var(--shadow-lg);
 }
 
@@ -338,6 +406,20 @@ iframe {
   height: 100%;
   border: 0;
   border-radius: 12px;
+  will-change: transform;
+}
+
+/* Hide Looker Studio page navigation */
+iframe::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: white;
+  z-index: 1000;
+  pointer-events: none;
 }
 
 /* ============ LOADING SCREEN ============ */
@@ -477,6 +559,14 @@ iframe {
   iframe {
     border-radius: 8px;
   }
+  
+  .header-btn span:not(.refresh-icon) {
+    display: none;
+  }
+  
+  .header-btn {
+    padding: 10px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -554,10 +644,16 @@ iframe {
         <div class="user-role" id="userRole">Role</div>
       </div>
     </div>
-    <button class="header-btn" id="openBtn">
-      <span>Open Native</span>
-      <span>↗</span>
-    </button>
+    <div class="header-actions">
+      <button class="header-btn" id="refreshBtn">
+        <span class="refresh-icon">🔄</span>
+        <span>Refresh Data</span>
+      </button>
+      <button class="header-btn" id="openBtn">
+        <span>Open Native</span>
+        <span>↗</span>
+      </button>
+    </div>
   </header>
 
   <main>
@@ -707,6 +803,24 @@ function initApp(userData) {
     setTimeout(() => frame.src = firstUrl, 150);
   }
   
+  // Refresh button functionality
+  const refreshBtn = document.getElementById('refreshBtn');
+  refreshBtn.onclick = () => {
+    const currentSrc = frame.src;
+    if (!currentSrc) return;
+    
+    refreshBtn.classList.add('refreshing');
+    
+    // Force refresh by temporarily clearing and reloading
+    frame.src = '';
+    setTimeout(() => {
+      frame.src = currentSrc;
+      setTimeout(() => {
+        refreshBtn.classList.remove('refreshing');
+      }, 1000);
+    }, 100);
+  };
+  
   // Open native button
   document.getElementById('openBtn').onclick = () => {
     const currentUrl = frame.src;
@@ -731,7 +845,33 @@ function initApp(userData) {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeMobileSidebar();
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+      e.preventDefault();
+      refreshBtn.click();
+    }
   });
+  
+  // Hide Looker Studio bottom navigation after iframe loads
+  frame.onload = () => {
+    try {
+      // Inject CSS to hide the bottom page navigation
+      const style = document.createElement('style');
+      style.textContent = `
+        .reporting-page-navigation,
+        .page-navigation,
+        [data-automation-id="page-navigation"],
+        .looker-page-nav {
+          display: none !important;
+          visibility: hidden !important;
+        }
+      `;
+      frame.contentDocument?.head?.appendChild(style);
+    } catch (e) {
+      // Cross-origin restrictions prevent direct access
+      // The CSS overlay approach in the iframe wrapper will handle this
+      console.log('Using CSS overlay to hide navigation');
+    }
+  };
 }
 
 function closeMobileSidebar() {
