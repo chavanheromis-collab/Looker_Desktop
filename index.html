@@ -99,7 +99,7 @@ main{flex:1;display:flex;overflow:hidden}
   border-radius:12px;
   overflow:hidden;
 }
-iframe{width:100%;height:100%;border:0}
+iframe{width:100%;height:100%;border:0;transition:opacity .15s}
 
 /* LOADING */
 #loading{
@@ -191,7 +191,7 @@ const PAGE_NAMES = {
   2:'FLOW CHART',
   3:'FIFO Stock',
   4:'PDI Stock',
-  5:'Eqnuiry Report',
+  5:'Enquiry Report',
   6:'Follow-Up Report',
   7:'Network Stock'
 };
@@ -202,15 +202,18 @@ const PAGE_NAMES = {
   const email=new URLSearchParams(location.search).get('email');
   if(!email)return showError('Missing email');
 
-  /* 🔥 FIX IS HERE */
-  const res=await fetch(
-    `${API}?email=${encodeURIComponent(email)}&src=appsheet`
-  );
+  try{
+    const res=await fetch(
+      `${API}?email=${encodeURIComponent(email)}&src=appsheet`
+    );
 
-  const data=await res.json();
-  if(!data.authorized)return showError('Access denied');
+    const data=await res.json();
+    if(!data.authorized)return showError('Access denied');
 
-  initApp(data.pages);
+    initApp(data.pages);
+  }catch(err){
+    showError('Connection error');
+  }
 })();
 
 /* ================= APP ================= */
@@ -246,12 +249,302 @@ function initApp(pages){
   });
 
   document.getElementById('refreshBtn').onclick=()=>{
-    frame.src = frame.src + '&_ts=' + Date.now();
+    frame.src = frame.src.split('&_ts=')[0] + '&_ts=' + Date.now();
   };
 
   document.getElementById('openBtn').onclick=()=>{
     if(frame.src)
-      window.open(frame.src.replace('/embed/reporting','/reporting'),'_blank');
+      window.open(frame.src.replace('/embed/reporting','/reporting').split('&_ts=')[0],'_blank');
+  };
+}
+
+/* ================= MOBILE SIDEBAR ================= */
+
+const sidebar=document.getElementById('sidebar');
+const overlay=document.getElementById('sidebarOverlay');
+const toggleBtn=document.getElementById('menuToggle');
+
+function openSidebar(){
+  sidebar.classList.add('open');
+  overlay.classList.add('show');
+}
+function closeSidebar(){
+  sidebar.classList.remove('open');
+  overlay.classList.remove('show');
+}
+
+toggleBtn.onclick=openSidebar;
+overlay.onclick=closeSidebar;
+
+window.addEventListener('resize',()=>{
+  if(window.innerWidth>1024)closeSidebar();
+});
+
+/* ================= ERROR ================= */
+
+function showError(msg){
+  document.getElementById('loading').textContent=msg;
+}
+</script>
+
+</body>
+</html><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Looker Studio Viewer</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#1a1d29;
+  --panel:#252936;
+  --accent:#667eea;
+  --text:#fff;
+  --muted:#b8c1ec;
+  font-family:Inter,system-ui,sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text)}
+
+.app{display:none;height:100vh;flex-direction:column}
+
+/* HEADER */
+header{
+  display:flex;
+  align-items:center;
+  padding:12px 16px;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+}
+
+.menu-toggle{
+  display:none;
+  font-size:20px;
+  margin-right:12px;
+  background:rgba(255,255,255,.2);
+  border:1px solid rgba(255,255,255,.25);
+  color:#fff;
+  border-radius:8px;
+  padding:6px 10px;
+  cursor:pointer;
+}
+
+.logo{
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.25);
+  border-radius:10px;
+  font-weight:600;
+}
+
+.title{margin-left:12px;font-size:14px;font-weight:600}
+.spacer{flex:1}
+
+.header-btn{
+  margin-left:8px;
+  padding:8px 14px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  cursor:pointer;
+}
+
+/* MAIN */
+main{flex:1;display:flex;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  background:var(--panel);
+  border-right:1px solid rgba(255,255,255,.08);
+  padding:12px;
+}
+
+.menu button{
+  width:100%;
+  margin-bottom:6px;
+  padding:10px 12px;
+  border-radius:8px;
+  background:none;
+  border:none;
+  color:var(--muted);
+  text-align:left;
+  cursor:pointer;
+}
+.menu button.active{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;
+}
+
+/* VIEWER */
+.viewer{flex:1;padding:12px}
+.iframe-wrap{
+  width:100%;
+  height:100%;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+}
+iframe{width:100%;height:100%;border:0;transition:opacity .15s}
+
+/* LOADING */
+#loading{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg);
+  color:var(--muted);
+  z-index:100;
+}
+
+/* MOBILE SIDEBAR */
+.sidebar-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:40;
+}
+
+@media (max-width:1024px){
+  .menu-toggle{display:block}
+
+  .sidebar{
+    position:fixed;
+    left:0;top:0;bottom:0;
+    z-index:50;
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    box-shadow:6px 0 18px rgba(0,0,0,.4);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.show{display:block}
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">Checking access…</div>
+
+<div class="app" id="app">
+<header>
+  <button class="menu-toggle" id="menuToggle">☰</button>
+  <div class="logo">LS</div>
+  <div class="title">Looker Studio Viewer</div>
+  <div class="spacer"></div>
+  <button class="header-btn" id="refreshBtn">Refresh</button>
+  <button class="header-btn" id="openBtn">Open ↗</button>
+</header>
+
+<main>
+  <aside class="sidebar" id="sidebar">
+    <div class="menu" id="menu"></div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="viewer">
+    <div class="iframe-wrap">
+      <iframe id="frame"></iframe>
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+'use strict';
+
+/* ================= CONFIG ================= */
+
+const API =
+'https://script.google.com/macros/s/AKfycbwBXE8QpvlJBOWhAIZiAMJu3dk2j_x2KYLUphppNgs8xJnpDH6OMWRwWZC2aFrCr5FE/exec';
+
+const PAGES = {
+  1:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345',
+  2:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7o5hbob7zd',
+  3:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_8qpzw1t6zd',
+  4:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d',
+  5:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_n8om9d8j0d',
+  6:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_yrgbw0z6zd',
+  7:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_w5jne27j0d'
+};
+
+const PAGE_NAMES = {
+  1:'Overview',
+  2:'FLOW CHART',
+  3:'FIFO Stock',
+  4:'PDI Stock',
+  5:'Enquiry Report',
+  6:'Follow-Up Report',
+  7:'Network Stock'
+};
+
+/* ================= INIT ================= */
+
+(async()=>{
+  const email=new URLSearchParams(location.search).get('email');
+  if(!email)return showError('Missing email');
+
+  try{
+    const res=await fetch(
+      `${API}?email=${encodeURIComponent(email)}&src=appsheet`
+    );
+
+    const data=await res.json();
+    if(!data.authorized)return showError('Access denied');
+
+    initApp(data.pages);
+  }catch(err){
+    showError('Connection error');
+  }
+})();
+
+/* ================= APP ================= */
+
+function initApp(pages){
+  document.getElementById('loading').remove();
+  document.getElementById('app').style.display='flex';
+
+  const menu=document.getElementById('menu');
+  const frame=document.getElementById('frame');
+  let activeBtn=null;
+
+  pages.forEach((p,i)=>{
+    const btn=document.createElement('button');
+    btn.textContent=PAGE_NAMES[p];
+
+    btn.onclick=()=>{
+      if(activeBtn)activeBtn.classList.remove('active');
+      btn.classList.add('active');
+      activeBtn=btn;
+
+      frame.style.opacity='0';
+      setTimeout(()=>{
+        frame.src=PAGES[p];
+        frame.onload=()=>frame.style.opacity='1';
+      },80);
+
+      closeSidebar();
+    };
+
+    menu.appendChild(btn);
+    if(i===0)btn.click();
+  });
+
+  document.getElementById('refreshBtn').onclick=()=>{
+    frame.src = frame.src.split('&_ts=')[0] + '&_ts=' + Date.now();
+  };
+
+  document.getElementById('openBtn').onclick=()=>{
+    if(frame.src)
+      window.open(frame.src.replace('/embed/reporting','/reporting').split('&_ts=')[0],'_blank');
   };
 }
 
