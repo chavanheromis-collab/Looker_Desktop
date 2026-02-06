@@ -112,6 +112,7 @@
       transform: translateX(0);
       transition: transform 0.3s ease;
       z-index: 9;
+      overflow-y: auto;
     }
 
     .sidebar.hidden {
@@ -148,6 +149,33 @@
       background: var(--accent);
       color: #051022;
       font-weight: 600;
+    }
+
+    .sidebar button.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .user-info {
+      padding: 12px;
+      margin-bottom: 12px;
+      background: rgba(6, 182, 212, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .user-info .email {
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .user-info .role {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     /* Overlay when sidebar open (for mobile) */
@@ -189,6 +217,45 @@
       display: inline-flex;
     }
 
+    /* Loading screen */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 20px;
+    }
+
+    .loading-screen.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(6, 182, 212, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      color: #ef4444;
+      text-align: center;
+      padding: 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 8px;
+      margin: 20px;
+    }
+
     @media (min-width: 768px) {
       .sidebar {
         position: relative;
@@ -201,14 +268,19 @@
 </head>
 
 <body>
-  <div class="app" role="application">
+  <div id="loadingScreen" class="loading-screen">
+    <div class="spinner"></div>
+    <div>Verifying access...</div>
+  </div>
+
+  <div class="app" role="application" style="display: none;">
     <header class="toolbar">
       <button id="toggleSidebar" class="icon-btn toggle-sidebar">☰</button>
       <div class="brand">
         <div class="logo">LS</div>
         <div>
           <div class="title">Looker Studio Viewer</div>
-          <div class="subtitle">Mobile-optimized wrapper</div>
+          <div class="subtitle" id="userRoleDisplay">Mobile-optimized wrapper</div>
         </div>
       </div>
       <div class="spacer"></div>
@@ -218,9 +290,20 @@
 
     <main class="viewer">
       <aside id="sidebar" class="sidebar">
+        <div id="userInfo" class="user-info" style="display: none;">
+          <div class="email" id="userEmail"></div>
+          <div class="role" id="userRole"></div>
+        </div>
+        
         <h3>Reports</h3>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/bd809d06-b179-4af4-9c38-f248a0285b2c/page/p_qpwrvqb8ud" class="active">HERO EBRD</button>
-        <button data-url="https://lookerstudio.google.com/embed/reporting/55506476-0bed-467d-9bcc-66c3b305b809/page/mn2aF">PREMIA Report</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345" data-page="1" data-roles="Admin,DSE,Manager,DMS,TelecallerHead">Page 1 - Dashboard</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_8qpzw1t6zd" data-page="2" data-roles="Admin,Manager">Page 2 - Sales Report</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d" data-page="3" data-roles="Admin,DSE,Manager">Page 3 - Performance</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_xyz123abc" data-page="4" data-roles="Admin,DMS">Page 4 - Inventory</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_abc456def" data-page="5" data-roles="Admin,TelecallerHead">Page 5 - Call Analytics</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_ghi789jkl" data-page="6" data-roles="Admin,Manager,DMS">Page 6 - Financial</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_mno012pqr" data-page="7" data-roles="Admin,DSE">Page 7 - Customer Data</button>
+        <button data-url="https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_stu345vwx" data-page="8" data-roles="Admin">Page 8 - Admin Panel</button>
       </aside>
 
       <div class="overlay" id="overlay"></div>
@@ -232,71 +315,183 @@
   </div>
 
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleSidebar = document.getElementById('toggleSidebar');
-    const overlay = document.getElementById('overlay');
-    const reportFrame = document.getElementById('reportFrame');
-    const openNative = document.getElementById('open-native');
-    const fullscreenBtn = document.getElementById('fullscreen');
-
-    // Sidebar toggle for mobile
-    toggleSidebar.addEventListener('click', () => {
-      sidebar.classList.toggle('hidden');
-      overlay.classList.toggle('show');
-    });
-    overlay.addEventListener('click', () => {
-      sidebar.classList.add('hidden');
-      overlay.classList.remove('show');
-    });
-
-    // Load selected report
-    function loadReport(url) {
-      if (!url) return;
-      reportFrame.src = url;
-      localStorage.setItem('lastReport', url);
+    // CONFIGURATION - Replace with your Google Sheets API endpoint
+    const GOOGLE_SHEET_URL = 'https://script.google.com/a/macros/chavanhero.in/s/AKfycbw0pC4J3lHdIGODq5iT8rCZ7pLZy0Mg3q3V6LnzyFeKozkp4qL1dlYftGmc98UrWRB3/exec';
+    
+    // Get URL parameters
+    function getURLParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        email: params.get('email') || params.get('user') || params.get('userEmail'),
+        directAccess: params.get('admin') === 'true'
+      };
     }
 
-    // Handle sidebar clicks
-    sidebar.querySelectorAll('button[data-url]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        sidebar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        loadReport(btn.dataset.url);
+    // Verify user against Google Sheets
+    async function verifyUser(email) {
+      try {
+        const response = await fetch(`${GOOGLE_SHEET_URL}?email=${encodeURIComponent(email)}`);
+        if (!response.ok) throw new Error('Failed to verify user');
+        
+        const data = await response.json();
+        return data; // Expected: { email: 'user@example.com', role: 'Admin', authorized: true }
+      } catch (error) {
+        console.error('User verification error:', error);
+        return { authorized: false, error: error.message };
+      }
+    }
+
+    // Initialize app
+    async function initApp() {
+      const loadingScreen = document.getElementById('loadingScreen');
+      const app = document.querySelector('.app');
+      const params = getURLParams();
+
+      // Admin direct access (no email check)
+      if (params.directAccess) {
+        loadingScreen.classList.add('hidden');
+        app.style.display = 'flex';
+        setupUI({ email: 'Admin', role: 'Admin', authorized: true });
+        return;
+      }
+
+      // Check for email parameter
+      if (!params.email) {
+        loadingScreen.innerHTML = `
+          <div class="error-message">
+            <h2>Access Denied</h2>
+            <p>No email parameter found. Please use the authorized link.</p>
+            <p style="font-size: 12px; margin-top: 20px;">Redirecting to AppSheet...</p>
+          </div>
+        `;
+        setTimeout(() => {
+          window.location.href = 'YOUR_APPSHEET_REDIRECT_URL_HERE';
+        }, 3000);
+        return;
+      }
+
+      // Verify user
+      const userData = await verifyUser(params.email);
+
+      if (!userData.authorized) {
+        loadingScreen.innerHTML = `
+          <div class="error-message">
+            <h2>Access Denied</h2>
+            <p>You are not authorized to access this dashboard.</p>
+            <p style="font-size: 12px; margin-top: 10px;">Email: ${params.email}</p>
+            <p style="font-size: 12px; margin-top: 20px;">Redirecting to AppSheet...</p>
+          </div>
+        `;
+        setTimeout(() => {
+          window.location.href = 'YOUR_APPSHEET_REDIRECT_URL_HERE';
+        }, 3000);
+        return;
+      }
+
+      // User authorized - setup UI
+      loadingScreen.classList.add('hidden');
+      app.style.display = 'flex';
+      setupUI(userData);
+    }
+
+    // Setup UI based on user role
+    function setupUI(userData) {
+      const sidebar = document.getElementById('sidebar');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const overlay = document.getElementById('overlay');
+      const reportFrame = document.getElementById('reportFrame');
+      const openNative = document.getElementById('open-native');
+      const fullscreenBtn = document.getElementById('fullscreen');
+      const userInfo = document.getElementById('userInfo');
+      const userEmail = document.getElementById('userEmail');
+      const userRole = document.getElementById('userRole');
+      const userRoleDisplay = document.getElementById('userRoleDisplay');
+
+      // Display user info
+      userInfo.style.display = 'block';
+      userEmail.textContent = userData.email;
+      userRole.textContent = `Role: ${userData.role}`;
+      userRoleDisplay.textContent = userData.role;
+
+      // Filter buttons based on role
+      const buttons = sidebar.querySelectorAll('button[data-url]');
+      const userRoleName = userData.role;
+      
+      buttons.forEach(btn => {
+        const allowedRoles = btn.dataset.roles.split(',');
+        if (!allowedRoles.includes(userRoleName)) {
+          btn.classList.add('disabled');
+          btn.style.display = 'none'; // Hide unauthorized pages
+        }
+      });
+
+      // Sidebar toggle for mobile
+      toggleSidebar.addEventListener('click', () => {
+        sidebar.classList.toggle('hidden');
+        overlay.classList.toggle('show');
+      });
+      
+      overlay.addEventListener('click', () => {
         sidebar.classList.add('hidden');
         overlay.classList.remove('show');
       });
-    });
 
-    // Restore last report or default
-    const saved = localStorage.getItem('lastReport');
-    if (saved) {
-      const match = [...sidebar.querySelectorAll('button')].find(b => b.dataset.url === saved);
-      if (match) match.classList.add('active');
-      loadReport(saved);
-    } else {
-      const first = sidebar.querySelector('button[data-url]');
-      loadReport(first.dataset.url);
+      // Load selected report
+      function loadReport(url) {
+        if (!url) return;
+        reportFrame.src = url;
+        localStorage.setItem('lastReport', url);
+      }
+
+      // Handle sidebar clicks
+      buttons.forEach(btn => {
+        if (!btn.classList.contains('disabled')) {
+          btn.addEventListener('click', () => {
+            sidebar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadReport(btn.dataset.url);
+            sidebar.classList.add('hidden');
+            overlay.classList.remove('show');
+          });
+        }
+      });
+
+      // Load first available report
+      const firstAvailable = [...buttons].find(b => !b.classList.contains('disabled'));
+      if (firstAvailable) {
+        firstAvailable.classList.add('active');
+        loadReport(firstAvailable.dataset.url);
+      }
+
+      // Open native Looker Studio tab
+      openNative.addEventListener('click', () => {
+        const active = sidebar.querySelector('button.active');
+        if (active) {
+          const nativeUrl = active.dataset.url.replace('/embed/reporting', '/reporting');
+          window.open(nativeUrl, '_blank');
+        }
+      });
+
+      // Fullscreen toggle
+      fullscreenBtn.addEventListener('click', async () => {
+        const el = reportFrame;
+        if (!document.fullscreenElement) {
+          await el.requestFullscreen().catch(err => console.log(err));
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(() => console.log('Service Worker registered'))
+          .catch(err => console.warn('SW failed', err));
+      }
     }
 
-    // Open native Looker Studio tab
-    openNative.addEventListener('click', () => {
-      const active = sidebar.querySelector('button.active');
-      if (active) window.open(active.dataset.url.replace('/embed/reporting','/reporting'), '_blank');
-    });
-
-    // Fullscreen toggle
-    fullscreenBtn.addEventListener('click', async () => {
-      const el = reportFrame;
-      if (!document.fullscreenElement) await el.requestFullscreen();
-      else document.exitFullscreen();
-    });
-
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(() => console.log('Service Worker registered'))
-        .catch(err => console.warn('SW failed', err));
-    }
+    // Start the app
+    initApp();
   </script>
 </body>
 </html>
