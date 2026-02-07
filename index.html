@@ -78,6 +78,11 @@ header{
   background:rgba(255,255,255,.15);
   color:#fff;
   cursor:pointer;
+  font-size:13px;
+}
+
+.header-btn:hover{
+  background:rgba(255,255,255,.25);
 }
 
 /* MAIN */
@@ -108,7 +113,9 @@ main{flex:1;display:flex;overflow:hidden}
 }
 
 /* VIEWER */
-.viewer{flex:1;padding:12px}
+.viewer{flex:1;padding:12px;transition:padding .3s}
+.viewer.fullscreen{padding:0}
+
 .iframe-wrap{
   width:100%;
   height:100%;
@@ -116,6 +123,11 @@ main{flex:1;display:flex;overflow:hidden}
   border-radius:12px;
   overflow:hidden;
   position:relative;
+  transition:border-radius .3s;
+}
+
+.viewer.fullscreen .iframe-wrap{
+  border-radius:0;
 }
 
 iframe{
@@ -124,6 +136,36 @@ iframe{
   border:0;
   transition:opacity .15s;
   margin-bottom:-60px;
+}
+
+/* FULLSCREEN CONTROLS */
+.fullscreen-controls{
+  display:none;
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:1000;
+  gap:8px;
+}
+
+.viewer.fullscreen .fullscreen-controls{
+  display:flex;
+}
+
+.fs-btn{
+  padding:10px 16px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(102,126,234,.95);
+  color:#fff;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:500;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+
+.fs-btn:hover{
+  background:rgba(118,75,162,.95);
 }
 
 /* LOADING */
@@ -160,6 +202,11 @@ iframe{
   }
   .sidebar.open{transform:translateX(0)}
   .sidebar-overlay.show{display:block}
+
+  .header-btn{
+    padding:6px 10px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
@@ -178,6 +225,9 @@ iframe{
     <span class="white">CHAVAN </span><span class="red">HERO</span>
   </div>
   <div class="spacer"></div>
+  <button class="header-btn" id="downloadBtn">Download PDF</button>
+  <button class="header-btn" id="exportBtn">Export Data</button>
+  <button class="header-btn" id="fullscreenBtn">Fullscreen</button>
   <button class="header-btn" id="refreshBtn">Refresh</button>
   <button class="header-btn" id="openBtn">Open ↗</button>
 </header>
@@ -189,7 +239,10 @@ iframe{
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <div class="viewer">
+  <div class="viewer" id="viewer">
+    <div class="fullscreen-controls">
+      <button class="fs-btn" id="exitFsBtn">Exit Fullscreen</button>
+    </div>
     <div class="iframe-wrap">
       <iframe id="frame"></iframe>
     </div>
@@ -277,14 +330,58 @@ function initApp(pages){
     if(i===0)btn.click();
   });
 
+  // Refresh button
   document.getElementById('refreshBtn').onclick=()=>{
     frame.src = frame.src.split('&_ts=')[0] + '&_ts=' + Date.now();
   };
 
+  // Open in new tab
   document.getElementById('openBtn').onclick=()=>{
     if(frame.src)
       window.open(frame.src.replace('/embed/reporting','/reporting').split('&_ts=')[0],'_blank');
   };
+
+  // Download PDF
+  document.getElementById('downloadBtn').onclick=()=>{
+    if(frame.src){
+      const pdfUrl = frame.src.replace('/embed/reporting','/reporting').split('&_ts=')[0] + '/export/pdf';
+      window.open(pdfUrl,'_blank');
+    }
+  };
+
+  // Export Data (CSV)
+  document.getElementById('exportBtn').onclick=()=>{
+    if(frame.src){
+      const csvUrl = frame.src.replace('/embed/reporting','/reporting').split('&_ts=')[0] + '/export';
+      window.open(csvUrl,'_blank');
+    }
+  };
+
+  // Fullscreen toggle
+  const viewer = document.getElementById('viewer');
+  const sidebar = document.getElementById('sidebar');
+  const header = document.querySelector('header');
+
+  document.getElementById('fullscreenBtn').onclick=()=>{
+    viewer.classList.add('fullscreen');
+    sidebar.style.display='none';
+    header.style.display='none';
+  };
+
+  document.getElementById('exitFsBtn').onclick=()=>{
+    viewer.classList.remove('fullscreen');
+    sidebar.style.display='';
+    header.style.display='';
+  };
+
+  // ESC key to exit fullscreen
+  document.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape' && viewer.classList.contains('fullscreen')){
+      viewer.classList.remove('fullscreen');
+      sidebar.style.display='';
+      header.style.display='';
+    }
+  });
 }
 
 /* ================= MOBILE SIDEBAR ================= */
