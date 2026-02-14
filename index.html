@@ -206,9 +206,11 @@ function initDashboard(){
 
       let url = PAGES[p];
 
-      if (currentRole === "DSE") {
+     if (currentRole === "DSE") {
 
-            const filterString = `include\uE00000\uE0000IN\uE0000${currentDSE}`;
+            const cleanedName = currentDSE.trim();
+        
+            const filterString = "include\uE00000\uE0000IN\uE0000" + cleanedName;
         
             const paramsObj = { df128: filterString };
         
@@ -216,6 +218,7 @@ function initDashboard(){
         
             url += (url.includes("?") ? "&" : "?") + "params=" + finalParams;
         }
+
 
       frame.src = url;
     };
