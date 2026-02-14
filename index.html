@@ -206,17 +206,22 @@ function initDashboard(){
 
       let url = PAGES[p];
 
-      if(currentRole === "DSE"){
-
-            // Build the special Looker filter format
-            const rawFilter = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
+      if (currentRole === "DSE") {
           
-            // First encode the filter value
-            const encodedFilter = encodeURIComponent(rawFilter);
+            // Build the internal filter structure EXACTLY like Looker does
+            const filterString = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
           
-            // Build params JSON manually (without double encoding entire JSON)
-            url += `?params=%7B%22df4%22:%22${encodedFilter}%22%7D`;
+            // Build params object
+            const paramsObj = {
+              df4: filterString
+            };
+          
+            // Double encode properly
+            const finalParams = encodeURIComponent(JSON.stringify(paramsObj));
+          
+            url += "?params=" + finalParams;
           }
+
 
 
       frame.src = url;
