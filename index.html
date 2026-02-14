@@ -204,12 +204,14 @@ function initDashboard(){
 
       if (currentRole === "DSE") {
 
-        const filterString = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
-        const paramsObj = { df4: filterString };
-        const finalParams = encodeURIComponent(JSON.stringify(paramsObj));
-
-        url += (url.includes("?") ? "&" : "?") + "params=" + finalParams;
-      }
+            const filterString = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
+        
+            const paramsObj = { df128: filterString };
+        
+            const finalParams = encodeURIComponent(JSON.stringify(paramsObj));
+        
+            url += (url.includes("?") ? "&" : "?") + "params=" + finalParams;
+        }
 
       frame.src = url;
     };
