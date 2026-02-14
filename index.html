@@ -208,10 +208,16 @@ function initDashboard(){
 
       if(currentRole === "DSE"){
 
-        const filterValue = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
-        const params = encodeURIComponent(JSON.stringify({ df4: filterValue }));
-        url += "?params=" + params;
-      }
+            // Build the special Looker filter format
+            const rawFilter = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
+          
+            // First encode the filter value
+            const encodedFilter = encodeURIComponent(rawFilter);
+          
+            // Build params JSON manually (without double encoding entire JSON)
+            url += `?params=%7B%22df4%22:%22${encodedFilter}%22%7D`;
+          }
+
 
       frame.src = url;
     };
