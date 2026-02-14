@@ -166,14 +166,17 @@ function initDashboard(){
 
     if (currentRole === "DSE") {
 
-        const filterString = "include\uE00000\uE0000IN\uE0000" + currentDSE;
-
-        const paramsObj = { df128: filterString };
-
-        const finalParams = encodeURIComponent(JSON.stringify(paramsObj));
-
+        const nameEncoded = encodeURIComponent(currentDSE);
+    
+        const filterPart =
+          "include%EE%80%25800%EE%80%2580IN%EE%80%2580" + nameEncoded;
+    
+        const finalParams =
+          "%7B%22df128%22:%22" + filterPart + "%22%7D";
+    
         url += "?params=" + finalParams;
     }
+
 
     frame.src = url;
   };
