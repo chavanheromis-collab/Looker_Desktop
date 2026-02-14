@@ -118,18 +118,24 @@ const API = "https://script.google.com/macros/s/AKfycbznU_3SWKemZRGHLaf0Yunuk1WH
 
 const PAGES = {
   1:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345',
-  2:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7o5hbob7zd'
+  2:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7o5hbob7zd',
+  3:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7tfj2zvo0d',
+  4:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d',
+  5:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_n8om9d8j0d'
 };
 
 const PAGE_NAMES = {
   1:'Overview',
-  2:'FLOW CHART'
+  2:'FLOW CHART',
+  3:'FIFO Stock',
+  4:'PDI Stock',
+  5:'Enquiry Report'
 };
 
 let currentDSE = "";
 let currentRole = "";
 
-/* LOGIN LOGIC */
+/* LOGIN */
 
 document.getElementById('loginBtn').onclick = async () => {
 
@@ -156,7 +162,7 @@ document.getElementById('loginBtn').onclick = async () => {
     document.getElementById('loginPage').style.display = "none";
     document.getElementById('app').style.display = "flex";
 
-    initDashboard(data.pages);
+    initDashboard();
 
   }catch(err){
     errorBox.textContent = "Server error";
@@ -165,7 +171,7 @@ document.getElementById('loginBtn').onclick = async () => {
 
 /* DASHBOARD */
 
-function initDashboard(pages){
+function initDashboard(){
 
   document.querySelector('.title').innerHTML += ` - ${currentDSE}`;
 
@@ -173,11 +179,21 @@ function initDashboard(pages){
   const frame = document.getElementById('frame');
   let activeBtn = null;
 
-  pages.forEach((p,i)=>{
+  let allowedPages;
+
+  if(currentRole === "Admin"){
+    allowedPages = Object.keys(PAGES);
+  } else {
+    allowedPages = [2,3,5];
+  }
+
+  allowedPages.forEach((p,i)=>{
+
     const btn=document.createElement('button');
     btn.textContent=PAGE_NAMES[p];
 
     btn.onclick=()=>{
+
       if(activeBtn)activeBtn.classList.remove('active');
       btn.classList.add('active');
       activeBtn=btn;
@@ -185,6 +201,7 @@ function initDashboard(pages){
       let url = PAGES[p];
 
       if(currentRole === "DSE"){
+
         const filterValue = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
         const params = encodeURIComponent(JSON.stringify({ df4: filterValue }));
         url += "?params=" + params;
@@ -194,6 +211,7 @@ function initDashboard(pages){
     };
 
     menu.appendChild(btn);
+
     if(i===0)btn.click();
   });
 }
