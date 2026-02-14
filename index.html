@@ -19,8 +19,6 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text)}
 
-.hidden{display:none}
-
 /* LOGIN */
 .login{
   height:100vh;
@@ -78,7 +76,7 @@ iframe{width:100%;height:100%;border:0}
 
 <body>
 
-<!-- LOGIN PAGE -->
+<!-- LOGIN -->
 <div class="login" id="loginPage">
   <div class="login-box">
     <h2>CHAVAN HERO</h2>
@@ -118,7 +116,7 @@ const API = "https://script.google.com/macros/s/AKfycbznU_3SWKemZRGHLaf0Yunuk1WH
 
 const PAGES = {
   1:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7o5hbob7zd',
-  2:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345?params=%7B%22df4%22:%22include%25EE%2580%25800%25EE%2580%2580IN%25EE%2580%2580GIRISH%2520JOSHI%22%7D',
+  2:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345',
   3:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_m59n1wrr0d',
   4:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_tnkmoexp0d',
   5:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_yrgbw0z6zd',
@@ -142,7 +140,6 @@ let currentDSE = "";
 let currentRole = "";
 
 /* LOGIN */
-
 document.getElementById('loginBtn').onclick = async () => {
 
   const code = document.getElementById('accessCode').value.trim();
@@ -162,7 +159,7 @@ document.getElementById('loginBtn').onclick = async () => {
       return;
     }
 
-    currentDSE = data.dse;
+    currentDSE = data.dse.trim();
     currentRole = data.role;
 
     document.getElementById('loginPage').style.display = "none";
@@ -176,7 +173,6 @@ document.getElementById('loginBtn').onclick = async () => {
 };
 
 /* DASHBOARD */
-
 function initDashboard(){
 
   document.querySelector('.title').innerHTML += ` - ${currentDSE}`;
@@ -207,34 +203,23 @@ function initDashboard(){
       let url = PAGES[p];
 
       if (currentRole === "DSE") {
-          
-            // Build the internal filter structure EXACTLY like Looker does
-            const filterString = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
-          
-            // Build params object
-            const paramsObj = {
-              df4: filterString
-            };
-          
-            // Double encode properly
-            const finalParams = encodeURIComponent(JSON.stringify(paramsObj));
-          
-            url += "?params=" + finalParams;
-          }
 
+        const filterString = `include\uE0000\uE0000IN\uE0000${currentDSE}`;
+        const paramsObj = { df4: filterString };
+        const finalParams = encodeURIComponent(JSON.stringify(paramsObj));
 
+        url += (url.includes("?") ? "&" : "?") + "params=" + finalParams;
+      }
 
       frame.src = url;
     };
 
     menu.appendChild(btn);
-
     if(i===0)btn.click();
   });
 }
 
 /* LOGOUT */
-
 document.getElementById('logoutBtn').onclick = () => {
   location.reload();
 };
