@@ -117,19 +117,25 @@ iframe{width:100%;height:100%;border:0}
 const API = "https://script.google.com/macros/s/AKfycbznU_3SWKemZRGHLaf0Yunuk1WHQYS-ncthLPNGg3thBhkyDbLijl0IYnY2RAmvVado/exec";
 
 const PAGES = {
-  1:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345',
-  2:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7o5hbob7zd',
-  3:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7tfj2zvo0d',
-  4:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d',
-  5:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_n8om9d8j0d'
+  1:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7o5hbob7zd',
+  2:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/page_12345',
+  3:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_m59n1wrr0d',
+  4:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_tnkmoexp0d',
+  5:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_yrgbw0z6zd',
+  6:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_7tfj2zvo0d',
+  7:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_dfjb22wh0d',
+  8:'https://lookerstudio.google.com/embed/reporting/fe1114cd-13d3-471d-9822-a13e596a738e/page/p_w5jne27j0d'
 };
 
 const PAGE_NAMES = {
-  1:'Overview',
-  2:'FLOW CHART',
-  3:'FIFO Stock',
-  4:'PDI Stock',
-  5:'Enquiry Report'
+  1:'FLOW CHART',
+  2:'B2D OVERVIEW',
+  3:'Quotation Report',
+  4:'Enquiry Report',
+  5:'Follow-Up Report',
+  6:'FIFO STOCK',
+  7:'PDI STOCK',
+  8:'NETWORK STOCK'
 };
 
 let currentDSE = "";
@@ -184,7 +190,7 @@ function initDashboard(){
   if(currentRole === "Admin"){
     allowedPages = Object.keys(PAGES);
   } else {
-    allowedPages = [2,3,5];
+    allowedPages = [2,3,4,5];
   }
 
   allowedPages.forEach((p,i)=>{
